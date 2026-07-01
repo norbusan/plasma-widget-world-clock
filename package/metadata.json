@@ -12,9 +12,9 @@
         "Icon": "clock",
         "Id": "org.kde.plasma.multitzclock",
         "License": "GPL-3.0-or-later",
-        "Name": "World Clock",
+        "Name": "Multi Timezone Clock",
         "Version": "1.0.0",
-        "Website": "https://github.com/norbusan/plasma-widget-world-clock"
+        "Website": "https://github.com/norbusan/plasma-widget-multi-tz-clock"
     },
     "X-Plasma-API-Minimum-Version": "6.0"
 }
