@@ -3,6 +3,8 @@
 A Plasma 6 desktop widget (plasmoid) that shows the current time and date for
 several time zones at once, one row per zone.
 
+![World Clock widget](screenshot.png)
+
 ## Features
 
 - One row per time zone: city name, time, and (optionally) date and UTC offset.
