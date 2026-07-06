@@ -20,6 +20,7 @@ PlasmoidItem {
     readonly property bool showSeconds: plasmoid.configuration.showSeconds
     readonly property bool showDate: plasmoid.configuration.showDate
     readonly property bool showOffset: plasmoid.configuration.showOffset
+    readonly property bool showWeekday: plasmoid.configuration.showWeekday
 
     readonly property string fontFamily: plasmoid.configuration.fontFamily || Kirigami.Theme.defaultFont.family
     readonly property bool fontBold: plasmoid.configuration.fontBold
@@ -93,6 +94,11 @@ PlasmoidItem {
         return d ? d.toLocaleDateString(Qt.locale(), Locale.LongFormat) : "";
     }
 
+    function weekdayText(tz) {
+        var d = zoneDate(tz);
+        return d ? Qt.formatDate(d, "ddd") : "";
+    }
+
     function offsetText(tz) {
         var d = zoneData(tz);
         if (!d || d["Offset"] === undefined)
@@ -152,6 +158,32 @@ PlasmoidItem {
         function smallPx() {
             return Math.max(7, Math.round(rowPx() * 0.7));
         }
+        // Middle info (offset/weekday) sizing: 2/3 of the row when only one
+        // line is shown, a bit under 1/2 when both are stacked.
+        function midOnePx() {
+            return Math.max(7, Math.round(rowPx() * 0.66));
+        }
+        function midBothPx() {
+            return Math.max(7, Math.round(rowPx() * 0.45));
+        }
+
+        // Width of the widest zone code, so every code column is the same
+        // width and the middle info (offset/weekday) starts at the same x on
+        // every row instead of wobbling with the code length.
+        FontMetrics {
+            id: codeFm
+            font.family: root.fontFamily
+            font.bold: true
+            font.pixelSize: fullRep.rowPx()
+        }
+        readonly property real codeColWidth: {
+            // Reference the font bits so the binding re-evaluates when they change.
+            var f = codeFm.font.pixelSize + codeFm.font.family.length + (codeFm.font.bold ? 1 : 0);
+            var w = 0;
+            for (var i = 0; i < root.rowZones.length; i++)
+                w = Math.max(w, codeFm.advanceWidth(TZ.code(root.rowZones[i])));
+            return w;
+        }
 
         ColumnLayout {
             anchors.fill: parent
@@ -194,6 +226,11 @@ PlasmoidItem {
                 delegate: RowLayout {
                     required property string modelData
 
+                    // Both info lines requested -> stacked; exactly one -> a
+                    // single line whose baseline aligns with the code/time.
+                    readonly property bool bothInfo: root.showOffset && root.showWeekday
+                    readonly property bool anyInfo: root.showOffset || root.showWeekday
+
                     Layout.fillWidth: true
                     spacing: Kirigami.Units.largeSpacing
 
@@ -202,21 +239,53 @@ PlasmoidItem {
                         font.family: root.fontFamily
                         font.bold: true
                         font.pixelSize: fullRep.rowPx()
-                        Layout.minimumWidth: implicitWidth
+                        Layout.minimumWidth: fullRep.codeColWidth
+                        Layout.preferredWidth: fullRep.codeColWidth
+                        Layout.alignment: Qt.AlignBaseline
                     }
 
+                    // Exactly one of weekday/offset: single line sharing the
+                    // code's baseline instead of being centred in the row.
                     PlasmaComponents3.Label {
-                        visible: root.showOffset
-                        text: root.offsetText(modelData)
+                        visible: anyInfo && !bothInfo
+                        Layout.fillWidth: true
+                        Layout.alignment: Qt.AlignBaseline
+                        text: root.showWeekday ? root.weekdayText(modelData)
+                                               : root.offsetText(modelData)
                         opacity: 0.7
                         font.family: root.fontFamily
-                        font.pixelSize: fullRep.smallPx()
+                        font.pixelSize: fullRep.midOnePx()
                         elide: Text.ElideRight
-                        Layout.fillWidth: true
                     }
-                    Item {
+
+                    // Both weekday and offset: stacked, centred in the row.
+                    ColumnLayout {
+                        visible: bothInfo
                         Layout.fillWidth: true
-                        visible: !root.showOffset
+                        spacing: 0
+
+                        PlasmaComponents3.Label {
+                            Layout.fillWidth: true
+                            text: root.weekdayText(modelData)
+                            opacity: 0.7
+                            font.family: root.fontFamily
+                            font.pixelSize: fullRep.midBothPx()
+                            elide: Text.ElideRight
+                        }
+                        PlasmaComponents3.Label {
+                            Layout.fillWidth: true
+                            text: root.offsetText(modelData)
+                            opacity: 0.7
+                            font.family: root.fontFamily
+                            font.pixelSize: fullRep.midBothPx()
+                            elide: Text.ElideRight
+                        }
+                    }
+
+                    // Neither: filler so the time stays right-aligned.
+                    Item {
+                        visible: !anyInfo
+                        Layout.fillWidth: true
                     }
 
                     PlasmaComponents3.Label {
@@ -224,7 +293,7 @@ PlasmoidItem {
                         font.family: root.fontFamily
                         font.bold: root.fontBold
                         font.pixelSize: fullRep.rowPx()
-                        Layout.alignment: Qt.AlignRight
+                        Layout.alignment: Qt.AlignRight | Qt.AlignBaseline
                     }
                 }
             }

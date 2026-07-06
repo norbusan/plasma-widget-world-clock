@@ -15,6 +15,7 @@ KCM.SimpleKCM {
     property alias cfg_showSeconds: showSeconds.checked
     property alias cfg_showDate: showDate.checked
     property alias cfg_showOffset: showOffset.checked
+    property alias cfg_showWeekday: showWeekday.checked
     property alias cfg_fontBold: fontBold.checked
     property alias cfg_fontSize: fontSize.value
     // Not an alias: the combo maps "Default" <-> "".
@@ -46,6 +47,11 @@ KCM.SimpleKCM {
         QQC2.CheckBox {
             id: showOffset
             text: i18n("Show UTC offset")
+        }
+
+        QQC2.CheckBox {
+            id: showWeekday
+            text: i18n("Show weekday")
         }
 
         Item { Kirigami.FormData.isSection: true }

@@ -25,6 +25,10 @@
         <entry name="showOffset" type="Bool">
             <default>false</default>
         </entry>
+        <!-- Show the weekday for each zone. -->
+        <entry name="showWeekday" type="Bool">
+            <default>false</default>
+        </entry>
         <!-- Font family for the widget; empty means the theme default. -->
         <entry name="fontFamily" type="String">
             <default></default>
